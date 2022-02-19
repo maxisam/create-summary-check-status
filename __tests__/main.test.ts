@@ -1,21 +1,29 @@
-// import {wait} from '../src/wait';
 // import * as process from 'process';
 // import * as cp from 'child_process';
 // import * as path from 'path';
-// import {expect, test} from '@jest/globals';
+import {expect, test} from '@jest/globals';
+import {CommitState, getState} from '../src/create-status-request';
 
-// test('throws invalid number', async () => {
-//   const input = parseInt('foo', 10);
-//   await expect(wait(input)).rejects.toThrow('milliseconds not a number');
-// });
+test('with assigned state', async () => {
+  const state = 'success';
+  const jobResults = ['success'];
+  const failureStates = ['failure'];
+  await expect(getState(state, jobResults, failureStates)).toBe('success');
+});
 
-// test('wait 500 ms', async () => {
-//   const start = new Date();
-//   await wait(500);
-//   const end = new Date();
-//   var delta = Math.abs(end.getTime() - start.getTime());
-//   expect(delta).toBeGreaterThan(450);
-// });
+test('with no assigned state, with failure in jobResults', async () => {
+  const state = '' as CommitState;
+  const jobResults = ['success', 'failure'];
+  const failureStates = ['failure'];
+  await expect(getState(state, jobResults, failureStates)).toBe('failure');
+});
+
+test('with no assigned state, with no failure in jobResults', async () => {
+  const state = '' as CommitState;
+  const jobResults = ['success', 'skipped'];
+  const failureStates = ['failure'];
+  await expect(getState(state, jobResults, failureStates)).toBe('success');
+});
 
 // // shows how the runner will run a javascript action with env / stdout protocol
 // test('test runs', () => {

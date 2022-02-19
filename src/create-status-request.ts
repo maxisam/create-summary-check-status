@@ -27,7 +27,10 @@ export function createStatusRequest(): StatusRequest {
 
   request.context = core.getInput(INPUTS.checkName);
   request.description = core.getInput(INPUTS.description);
-  request.state = getState();
+  const state = core.getInput(INPUTS.state) as CommitState;
+  const jobResults = core.getMultilineInput(INPUTS.jobResults);
+  const failureStates = core.getMultilineInput(INPUTS.failureStates);
+  request.state = getState(state, jobResults, failureStates);
   request.owner = core.getInput(INPUTS.owner);
   request.repo = core.getInput(INPUTS.repository);
   request.sha = core.getInput(INPUTS.sha);
@@ -42,20 +45,16 @@ export function createStatusRequest(): StatusRequest {
   }
 
   if (request.repo.startsWith(`${request.owner}/`)) {
-    request.repository = request.repo.replace(`${request.owner}/`, '');
+    request.repo = request.repo.replace(`${request.owner}/`, '');
   }
 
   return request;
 }
 
-function getState(): CommitState {
-  const state = core.getInput(INPUTS.state) as CommitState;
+export function getState(state: CommitState, jobResults: string[], failureStates: string[]): CommitState {
   if (validateState(state)) {
     return state;
   }
-
-  const jobResults = core.getMultilineInput(INPUTS.jobResults);
-  const failureStates = core.getMultilineInput(INPUTS.failureStates);
   const isFailure = !!jobResults.find(jobResult => failureStates.includes(jobResult));
   if (isFailure) {
     return COMMIT_STATE.failure;

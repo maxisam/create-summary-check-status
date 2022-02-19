@@ -21,7 +21,7 @@ inputs:
     default: |
       failure
       cancelled
-    required: false    
+    required: false
   checkName:
     description: 'The context, this is displayed as the name of the check'
     default: 'Check Status Summary'
