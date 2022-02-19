@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  workflow_dispatch:  
+  pull_request:
+    paths-ignore:
+      - '**.md'  
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set Node.js 16.x
+        uses: actions/setup-node@v2.5.1
+        with:
+          node-version: 16.x
+          cache: 'yarn'
+
+      - run: yarn install
+
+      - run: yarn build && yarn package
+
+      - uses: EndBug/add-and-commit@756d9ea820f11931e591eaf57f25e0f5b903d5b2
+        with:
+          add: 'dist'
+          message: 'chore: build, dist updated'
