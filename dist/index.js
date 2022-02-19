@@ -118,7 +118,7 @@ function run() {
         try {
             octokit = new rest_1.Octokit({
                 auth: authToken,
-                userAgent: 'github-action-create-summary-status',
+                userAgent: 'github-action-create-summary-check-status',
                 baseUrl: 'https://api.github.com',
                 log: {
                     debug: () => { },
