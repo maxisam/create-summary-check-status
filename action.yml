@@ -1,6 +1,9 @@
 name: 'Create Summary Check Status'
 description: 'Provide a final check for multiple checks'
 author: 'maxisam'
+branding:
+  icon: check
+  color: yellow
 inputs:
   jobResults:
     required: true
