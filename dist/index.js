@@ -26,7 +26,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.createStatusRequest = exports.ERR_INVALID_STATE = exports.ERR_INVALID_OWNER = void 0;
+exports.getState = exports.createStatusRequest = exports.ERR_INVALID_STATE = exports.ERR_INVALID_OWNER = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const modal_1 = __nccwpck_require__(5696);
 exports.ERR_INVALID_OWNER = "Input 'owner' must be a valid GitHub username";
@@ -36,7 +36,10 @@ function createStatusRequest() {
     const request = {};
     request.context = core.getInput(modal_1.INPUTS.checkName);
     request.description = core.getInput(modal_1.INPUTS.description);
-    request.state = getState();
+    const state = core.getInput(modal_1.INPUTS.state);
+    const jobResults = core.getMultilineInput(modal_1.INPUTS.jobResults);
+    const failureStates = core.getMultilineInput(modal_1.INPUTS.failureStates);
+    request.state = getState(state, jobResults, failureStates);
     request.owner = core.getInput(modal_1.INPUTS.owner);
     request.repo = core.getInput(modal_1.INPUTS.repository);
     request.sha = core.getInput(modal_1.INPUTS.sha);
@@ -48,24 +51,22 @@ function createStatusRequest() {
         throw new Error(exports.ERR_INVALID_STATE);
     }
     if (request.repo.startsWith(`${request.owner}/`)) {
-        request.repository = request.repo.replace(`${request.owner}/`, '');
+        request.repo = request.repo.replace(`${request.owner}/`, '');
     }
     return request;
 }
 exports.createStatusRequest = createStatusRequest;
-function getState() {
-    const state = core.getInput(modal_1.INPUTS.state);
+function getState(state, jobResults, failureStates) {
     if (validateState(state)) {
         return state;
     }
-    const jobResults = core.getMultilineInput(modal_1.INPUTS.jobResults);
-    const failureStates = core.getMultilineInput(modal_1.INPUTS.failureStates);
     const isFailure = !!jobResults.find(jobResult => failureStates.includes(jobResult));
     if (isFailure) {
         return modal_1.COMMIT_STATE.failure;
     }
     return modal_1.COMMIT_STATE.success;
 }
+exports.getState = getState;
 function validateState(state) {
     return Object.values(modal_1.COMMIT_STATE).includes(state);
 }

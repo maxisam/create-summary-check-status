@@ -4,12 +4,14 @@ on:
   workflow_dispatch:  
   pull_request:
     paths-ignore:
-      - '**.md'  
+      - '**.md'
+      - dist/**
   push:
     branches:
       - main
     paths-ignore:
       - '**.md'
+      - dist/**
 jobs:
   build:
     name: Build
@@ -25,9 +27,35 @@ jobs:
 
       - run: yarn install
 
-      - run: yarn build && yarn package
+      - run: yarn all
 
-      - uses: EndBug/add-and-commit@756d9ea820f11931e591eaf57f25e0f5b903d5b2
+      - name: Compare the expected and actual dist/ directories
+        id: diff
+        run: |
+          if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build.  See status below:"
+            git diff
+            echo "::set-output name=diff::true"
+          fi
+
+      - name: commit build
+        if: ${{ steps.diff.outputs.diff }}
+        run: |
+          git config --local user.email "maxisam@gmail.com"
+          git config --local user.name "maxisam"
+          git add dist/
+          git commit -m "chore: build, dist updated"
+          git push origin ${{ github.ref_name }}
+  check:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: always()
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
         with:
-          add: 'dist'
-          message: 'chore: build, dist updated'
+          jobResults: |
+             ${{ needs.build.result }}
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          checkName: CI PASSED
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
