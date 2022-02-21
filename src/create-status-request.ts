@@ -1,8 +1,6 @@
-import * as core from '@actions/core';
 import {RequestParameters} from '@octokit/types';
-import {COMMIT_STATE, INPUTS} from './modal';
+import {CommitState, COMMIT_STATE, IInputs} from './modal';
 
-export type CommitState = keyof typeof COMMIT_STATE;
 export type StatusRequest = RequestParameters &
   Omit<
     {
@@ -17,36 +15,17 @@ export type StatusRequest = RequestParameters &
     },
     'baseUrl'
   >;
-export const ERR_INVALID_OWNER = "Input 'owner' must be a valid GitHub username";
-export const ERR_INVALID_STATE = "Input 'state' must be one of success | error | failure | pending";
 
-const regExUsername = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
-
-export function createStatusRequest(): StatusRequest {
-  const request: StatusRequest = {} as StatusRequest;
-
-  request.context = core.getInput(INPUTS.checkName);
-  request.description = core.getInput(INPUTS.description);
-  const state = core.getInput(INPUTS.state) as CommitState;
-  const jobResults = core.getMultilineInput(INPUTS.jobResults);
-  const failureStates = core.getMultilineInput(INPUTS.failureStates);
-  request.state = getState(state, jobResults, failureStates);
-  request.owner = core.getInput(INPUTS.owner);
-  request.repo = core.getInput(INPUTS.repository);
-  request.sha = core.getInput(INPUTS.sha);
-  request.target_url = core.getInput(INPUTS.targetUrl);
-
-  if (!regExUsername.test(request.owner)) {
-    throw new Error(ERR_INVALID_OWNER);
-  }
-
-  if (!validateState(request.state)) {
-    throw new Error(ERR_INVALID_STATE);
-  }
-
-  if (request.repo.startsWith(`${request.owner}/`)) {
-    request.repo = request.repo.replace(`${request.owner}/`, '');
-  }
+export function createStatusRequest(owner: string, repo: string, inputs: IInputs): StatusRequest {
+  const request: StatusRequest = {
+    description: inputs.description,
+    context: inputs.context,
+    owner,
+    repo,
+    sha: inputs.sha,
+    target_url: inputs.target_url,
+    state: getState(inputs.state, inputs.jobResults, inputs.failureStates)
+  };
 
   return request;
 }

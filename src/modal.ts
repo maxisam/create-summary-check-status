@@ -17,3 +17,18 @@ export enum COMMIT_STATE {
   failure = 'failure',
   pending = 'pending'
 }
+
+export type CommitState = keyof typeof COMMIT_STATE;
+
+export interface IInputs {
+  authToken: string;
+  context: string;
+  description: string;
+  failureStates: string[];
+  jobResults: string[];
+  owner: string;
+  repo: string;
+  sha: string;
+  state: CommitState;
+  target_url: string;
+}

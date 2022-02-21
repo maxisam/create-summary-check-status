@@ -1,7 +1,7 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 627:
+/***/ 6979:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -26,33 +26,91 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getState = exports.createStatusRequest = exports.ERR_INVALID_STATE = exports.ERR_INVALID_OWNER = void 0;
+exports.getOctokit = exports.getOwnerRepo = exports.getInputs = exports.ERR_INVALID_OWNER = void 0;
 const core = __importStar(__nccwpck_require__(2186));
+const rest_1 = __nccwpck_require__(5375);
+const util_1 = __nccwpck_require__(3837);
 const modal_1 = __nccwpck_require__(5696);
 exports.ERR_INVALID_OWNER = "Input 'owner' must be a valid GitHub username";
-exports.ERR_INVALID_STATE = "Input 'state' must be one of success | error | failure | pending";
-const regExUsername = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
-function createStatusRequest() {
-    const request = {};
-    request.context = core.getInput(modal_1.INPUTS.checkName);
-    request.description = core.getInput(modal_1.INPUTS.description);
-    const state = core.getInput(modal_1.INPUTS.state);
-    const jobResults = core.getMultilineInput(modal_1.INPUTS.jobResults);
-    const failureStates = core.getMultilineInput(modal_1.INPUTS.failureStates);
-    request.state = getState(state, jobResults, failureStates);
-    request.owner = core.getInput(modal_1.INPUTS.owner);
-    request.repo = core.getInput(modal_1.INPUTS.repository);
-    request.sha = core.getInput(modal_1.INPUTS.sha);
-    request.target_url = core.getInput(modal_1.INPUTS.targetUrl);
-    if (!regExUsername.test(request.owner)) {
+function getInputs() {
+    const inputs = {
+        authToken: core.getInput(modal_1.INPUTS.authToken),
+        context: core.getInput(modal_1.INPUTS.checkName),
+        description: core.getInput(modal_1.INPUTS.description),
+        failureStates: core.getMultilineInput(modal_1.INPUTS.failureStates),
+        jobResults: core.getMultilineInput(modal_1.INPUTS.jobResults),
+        owner: core.getInput(modal_1.INPUTS.owner),
+        repo: core.getInput(modal_1.INPUTS.repository),
+        sha: core.getInput(modal_1.INPUTS.sha),
+        state: core.getInput(modal_1.INPUTS.state),
+        target_url: core.getInput(modal_1.INPUTS.targetUrl)
+    };
+    core.debug(`Inputs: ${(0, util_1.inspect)(inputs)}`);
+    return inputs;
+}
+exports.getInputs = getInputs;
+function getOwnerRepo(owner, repository) {
+    const regExUsername = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+    if (!regExUsername.test(owner)) {
         throw new Error(exports.ERR_INVALID_OWNER);
     }
-    if (!validateState(request.state)) {
-        throw new Error(exports.ERR_INVALID_STATE);
+    if (repository.startsWith(`${owner}/`)) {
+        const [repoOwner, repo] = repository.split('/');
+        return [repoOwner, repo];
     }
-    if (request.repo.startsWith(`${request.owner}/`)) {
-        request.repo = request.repo.replace(`${request.owner}/`, '');
+    return [owner, repository];
+}
+exports.getOwnerRepo = getOwnerRepo;
+function getOctokit(authToken, userAgent = 'github-action') {
+    let octokit = null;
+    try {
+        octokit = new rest_1.Octokit({
+            auth: authToken,
+            userAgent,
+            baseUrl: 'https://api.github.com',
+            log: {
+                debug: () => { },
+                info: () => { },
+                warn: console.warn,
+                error: console.error
+            },
+            request: {
+                agent: undefined,
+                fetch: undefined,
+                timeout: 0
+            }
+        });
     }
+    catch (error) {
+        if (error instanceof Error) {
+            core.setFailed(`Error creating octokit:\n${error.message}`);
+        }
+    }
+    return octokit;
+}
+exports.getOctokit = getOctokit;
+
+
+/***/ }),
+
+/***/ 627:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getState = exports.createStatusRequest = void 0;
+const modal_1 = __nccwpck_require__(5696);
+function createStatusRequest(owner, repo, inputs) {
+    const request = {
+        description: inputs.description,
+        context: inputs.context,
+        owner,
+        repo,
+        sha: inputs.sha,
+        target_url: inputs.target_url,
+        state: getState(inputs.state, inputs.jobResults, inputs.failureStates)
+    };
     return request;
 }
 exports.createStatusRequest = createStatusRequest;
@@ -109,44 +167,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const rest_1 = __nccwpck_require__(5375);
+const util_1 = __nccwpck_require__(3837);
+const common_1 = __nccwpck_require__(6979);
 const create_status_request_1 = __nccwpck_require__(627);
-const modal_1 = __nccwpck_require__(5696);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const authToken = core.getInput(modal_1.INPUTS.authToken);
-        let octokit = null;
+        const inputs = (0, common_1.getInputs)();
+        const [owner, repo] = (0, common_1.getOwnerRepo)(inputs.owner, inputs.repo);
+        const octokit = (0, common_1.getOctokit)(inputs.authToken, 'github-action-create-summary-check-status');
+        let request;
         try {
-            octokit = new rest_1.Octokit({
-                auth: authToken,
-                userAgent: 'github-action-create-summary-check-status',
-                baseUrl: 'https://api.github.com',
-                log: {
-                    debug: () => { },
-                    info: () => { },
-                    warn: console.warn,
-                    error: console.error
-                },
-                request: {
-                    agent: undefined,
-                    fetch: undefined,
-                    timeout: 0
-                }
-            });
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                core.setFailed(`Error creating octokit:\n${error.message}`);
-            }
-            return;
-        }
-        if (octokit == null) {
-            core.setFailed('Error creating octokit:\noctokit was null');
-            return;
-        }
-        let statusRequest;
-        try {
-            statusRequest = (0, create_status_request_1.createStatusRequest)();
+            request = (0, create_status_request_1.createStatusRequest)(owner, repo, inputs);
+            core.debug(`dispatch event request: ${(0, util_1.inspect)(request)}`);
         }
         catch (error) {
             if (error instanceof Error) {
@@ -154,12 +186,18 @@ function run() {
             }
             return;
         }
-        try {
-            yield octokit.repos.createCommitStatus(statusRequest);
+        if (octokit === null) {
+            core.setFailed('Error creating octokit:\noctokit was null');
         }
-        catch (error) {
-            if (error instanceof Error) {
-                core.setFailed(`Error setting status:\n${error.message}\nRequest object:\n${JSON.stringify(statusRequest, null, 2)}`);
+        else {
+            try {
+                yield octokit.repos.createCommitStatus(request);
+            }
+            catch (error) {
+                core.debug((0, util_1.inspect)(error));
+                if (error instanceof Error) {
+                    core.setFailed(`Error setting status:\n${error.message}\nRequest object:\n${JSON.stringify(request, null, 2)}`);
+                }
             }
         }
     });
