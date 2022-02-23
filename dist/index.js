@@ -178,6 +178,7 @@ function run() {
         let request;
         try {
             request = (0, create_status_request_1.createStatusRequest)(owner, repo, inputs);
+            core.setOutput('summary', request.state);
             core.debug(`dispatch event request: ${(0, util_1.inspect)(request)}`);
         }
         catch (error) {
