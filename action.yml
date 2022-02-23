@@ -16,9 +16,6 @@ inputs:
     description: 'The status of the check: success, error, failure or pending (if this is not set, it is in summary mode)'
     default: ''
     required: false
-  successState:
-    description: 'The job results for success'
-    required: false
   failureState:
     description: 'The job results for failure'
     default: |
@@ -48,6 +45,11 @@ inputs:
   targetUrl: 
     description: 'URL/URI to use for further details.'
     required: false
+
+outputs:
+  summary:
+    description: The result of input state
+
 runs:
   using: 'node16'
   main: 'dist/index.js'

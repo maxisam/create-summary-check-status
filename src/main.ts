@@ -10,6 +10,7 @@ async function run(): Promise<void> {
   let request: StatusRequest;
   try {
     request = createStatusRequest(owner, repo, inputs);
+    core.setOutput('summary', request.state);
     core.debug(`dispatch event request: ${inspect(request)}`);
   } catch (error) {
     if (error instanceof Error) {

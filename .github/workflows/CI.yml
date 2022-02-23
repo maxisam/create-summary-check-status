@@ -101,11 +101,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./
+        id: check-summary
         with:
           jobResults: |
              ${{ needs.job-failure1.result }}
              ${{ needs.job-failure2.result }}
              ${{ needs.job-failure3.result }}
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          checkName: CI PASSED
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./
+        if: steps.check-summary.outputs.summary == 'failure'
+        with:
+          jobResults: |
+             success
           authToken: ${{secrets.GITHUB_TOKEN}}
           checkName: CI PASSED
           sha: ${{ github.event.pull_request.head.sha || github.sha }}

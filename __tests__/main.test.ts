@@ -9,10 +9,17 @@ test('with assigned state', async () => {
   await expect(getState(state, jobResults, failureStates)).toBe('success');
 });
 
-test('with no assigned state, with failure in jobResults', async () => {
+test('with no assigned state, with failure and success in jobResults', async () => {
   const state = '' as CommitState;
   const jobResults = ['success', 'failure'];
   const failureStates = ['failure'];
+  await expect(getState(state, jobResults, failureStates)).toBe('failure');
+});
+
+test('with no assigned state, with failure in jobResults', async () => {
+  const state = '' as CommitState;
+  const jobResults = ['failure', 'failure', 'failure'];
+  const failureStates = ['failure', 'cancled'];
   await expect(getState(state, jobResults, failureStates)).toBe('failure');
 });
 
