@@ -16,7 +16,7 @@ inputs:
     description: 'The status of the check: success, error, failure or pending (if this is not set, it is in summary mode)'
     default: ''
     required: false
-  failureState:
+  failureStates:
     description: 'The job results for failure'
     default: |
       failure

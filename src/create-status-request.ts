@@ -1,6 +1,4 @@
-import * as core from '@actions/core';
 import {RequestParameters} from '@octokit/types';
-import {inspect} from 'util';
 import {CommitState, COMMIT_STATE, IInputs} from './modal';
 
 export type StatusRequest = RequestParameters &
@@ -36,8 +34,6 @@ export function getState(state: CommitState, jobResults: string[], failureStates
   if (validateState(state)) {
     return state;
   }
-  core.debug(`jobResults: ${inspect(jobResults)}`);
-  core.debug(`failureStates: ${inspect(failureStates)}`);
   const isFailure = !!jobResults.find(jobResult => failureStates.includes(jobResult));
   if (isFailure) {
     return COMMIT_STATE.failure;
