@@ -1,0 +1,24 @@
+name: workflow-a
+
+on:
+  workflow_call:
+    inputs:
+      isSuccess:
+        default: false
+        required: false
+        type: boolean
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: step 1
+      if: ${{ !inputs.isSuccess }}
+      run: |
+        echo "step1 failed"
+        exit 1
+    - name: step 2
+      run: |
+        echo "step2 success"
+        exit 0
