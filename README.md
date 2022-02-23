@@ -27,7 +27,7 @@ check:
         # name showing on the check
         checkName: CI PASSED
         # if any result in job1,job2 is [failure,cacelled], the check will be failure, otherwise the check will be success
-        failureState: |
+        failureStates: |
           failure
           cancelled
         # for PR or Push
@@ -36,4 +36,4 @@ check:
 
 Of course, you can use this action to assign any state to a commit
 
-if you just use `state` input, it will ignore `jobResults` and `failureState`
+if you just use `state` input, it will ignore `jobResults` and `failureStates`
