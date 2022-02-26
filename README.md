@@ -33,7 +33,9 @@ check:
         # for PR or Push
         sha: ${{ github.event.pull_request.head.sha || github.sha }}
 ```
+Find more example [here](https://github.com/maxisam/create-summary-check-status/blob/main/.github/workflows/test-failure.yml) 
 
 Of course, you can use this action to assign any state to a commit
 
 if you just use `state` input, it will ignore `jobResults` and `failureStates`
+
