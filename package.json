@@ -31,7 +31,7 @@
     "@octokit/rest": "^18.12.0"
   },
   "devDependencies": {
-    "@types/node": "^16.11.25",
+    "@types/node": "^16.11.26",
     "@octokit/types": "^6.34.0",
     "@typescript-eslint/parser": "^5.12.1",
     "@vercel/ncc": "^0.33.3",
