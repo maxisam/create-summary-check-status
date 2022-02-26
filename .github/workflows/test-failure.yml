@@ -1,0 +1,64 @@
+name: '🌩️ Test Failure'
+
+on:
+  workflow_dispatch:  
+
+jobs:
+  job-failure1:
+    runs-on: ubuntu-latest
+    steps:
+    - name: step 1
+      run: |
+        echo "step1 failed"
+        exit 1
+    - name: step 2
+      if: ${{ failure() }}
+      run: |
+        echo "step2 success"
+        exit 0
+
+  job-failure2:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: step 1
+      run: |
+        echo "step1 failed"
+        exit 1
+  job-failure3:
+    uses: maxisam/create-summary-check-status/.github/workflows/.workflow-a.yml@main
+    with:
+      isSuccess: false
+
+  job-test:
+    uses: maxisam/create-summary-check-status/.github/workflows/.workflow-a.yml@main
+    needs: job-failure3
+    if: needs.job-failure3.result == 'success'
+    with:
+      isSuccess: true
+
+  check-failure:
+    runs-on: ubuntu-latest
+    needs: [job-failure1, job-failure2, job-failure3]
+    if: always()
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: check-summary
+        with:
+          jobResults: |
+             ${{ needs.job-failure1.result }}
+             ${{ needs.job-failure2.result }}
+             ${{ needs.job-failure3.result }}
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          checkName: CI PASSED
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./
+        if: steps.check-summary.outputs.summary == 'failure'
+        with:
+          jobResults: |
+             success
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          checkName: CI PASSED
+          sha: ${{ github.event.pull_request.head.sha || github.sha }}
