@@ -20,7 +20,7 @@ jobs:
   job-failure2:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: step 1
       run: |
@@ -43,7 +43,7 @@ jobs:
     needs: [job-failure1, job-failure2, job-failure3]
     if: always()
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: check-summary
         with:
