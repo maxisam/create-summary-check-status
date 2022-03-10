@@ -1,20 +1,31 @@
 name: '🌩️ Test Failure'
 
 on:
-  workflow_dispatch:  
+  workflow_dispatch:
 
 jobs:
   job-failure1:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+
     - name: step 1
       run: |
         echo "step1 failed"
         exit 1
     - name: step 2
-      if: ${{ failure() }}
+      if: failure() 
       run: |
         echo "step2 success"
+        exit 0
+
+  job-failure1-dep:
+    runs-on: ubuntu-latest
+    needs: job-failure1
+    steps:
+    - name: step 1
+      run: |
+        echo "job1: ${{ needs.job-failure1.result }}"
         exit 0
 
   job-failure2:
